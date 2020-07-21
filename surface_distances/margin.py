@@ -112,8 +112,6 @@ def compute_distances(mask_gt, mask_pred, exclusion_zone, spacing_mm, connectivi
     distances_gt_to_pred = distmap_pred[borders_gt > 0]
     distances_pred_to_gt = distmap_gt[borders_pred > 0]
 
-    borders_exclusion = None
-    distmap_exclusion = None
     return {"distances_gt_to_pred": distances_gt_to_pred,
             "distances_pred_to_gt": distances_pred_to_gt,
             "borders_gt": borders_gt,

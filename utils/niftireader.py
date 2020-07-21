@@ -19,8 +19,7 @@ def image_to_np(image):
 
 def load_image(file):
     image = nib.load(file)
-    # image = nib.as_closest_canonical(image)
-    # print(nib.aff2axcodes(image.affine))
+    image = nib.as_closest_canonical(image)
     image_np = image_to_np(image)
 
     return image, image_np
