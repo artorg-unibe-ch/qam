@@ -17,6 +17,7 @@ matplotlib.use('Agg')
 np.seterr(divide='ignore', invalid='ignore')
 cmap = sns.color_palette("colorblind")  # colorblind friendly palette
 
+
 def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map, num_voxels, title, ablation_date):
     """
 
@@ -63,15 +64,16 @@ def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map,
     sum_perc_insuffablated = ((voxels_insuffablated / num_voxels) * 100).sum()
     sum_perc_ablated = ((voxels_ablated / num_voxels) * 100).sum()
     # %% iterate through the bins to change the colors of the patches bases on the range [mm]
-    if b < 0:
-        plt.setp(p, 'facecolor', cmap[3],
-                 label='Ablation Margin ' + r'$x < 0$' + 'mm :' + " %.2f" % sum_perc_nonablated + '%')
-    elif 0 <= b < 5:
-        plt.setp(p, 'facecolor', cmap[8],
-                 label='Ablation Margin ' + r'$0 \leq x < 5$' + 'mm: ' + "%.2f" % sum_perc_insuffablated + '%')
-    elif b >= 5:  # fixed color in histogram
-        plt.setp(p, 'facecolor', cmap[2],
-                 label='Ablation Margin ' + r'$x \geq 5$' + 'mm: ' + " %.2f" % sum_perc_ablated + '%')
+    for b, p, col_val in zip(bins, patches, col_height):
+        if b < 0:
+            plt.setp(p, 'facecolor', cmap[3],
+                     label='Ablation Margin ' + r'$x < 0$' + 'mm :' + " %.2f" % sum_perc_nonablated + '%')
+        elif 0 <= b < 5:
+            plt.setp(p, 'facecolor', cmap[8],
+                     label='Ablation Margin ' + r'$0 \leq x < 5$' + 'mm: ' + "%.2f" % sum_perc_insuffablated + '%')
+        elif b >= 5:
+            plt.setp(p, 'facecolor', cmap[2],
+                     label='Ablation Margin ' + r'$x \geq 5$' + 'mm: ' + " %.2f" % sum_perc_ablated + '%')
     # %% edit the axes limits and labels
     plt.xlabel('Surface-to-Surface exact Euclidean Distances (mm)', fontsize=fontsize, color='black')
     plt.tick_params(labelsize=fontsize, color='black')
@@ -88,10 +90,8 @@ def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map,
     plt.yticks(new_yticks, yticks_percent)
 
     plt.ylabel('Tumor Surface Covered (%)', fontsize=fontsize, color='black')
-
     handles, labels = plt.gca().get_legend_handles_labels()
     by_label = OrderedDict(zip(labels, handles))
-
     plt.legend(by_label.values(), by_label.keys(), fontsize=fontsize, loc='upper left')
     plt.xticks(fontsize=fontsize)
     ax.tick_params(axis='both', labelsize=fontsize)
@@ -102,7 +102,6 @@ def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map,
     plt.title(title + '. Case ' + str(pat_name) + '. Lesion ' + str(lesion_id), fontsize=fontsize)
     figpathHist = os.path.join(rootdir, figName_hist)
     ax.set_rasterized(True)
-
     plt.savefig(figpathHist, dpi=600, bbox_inches='tight')
     plt.savefig(figpathHist + '.svg', dpi=600)
 
