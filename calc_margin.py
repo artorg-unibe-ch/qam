@@ -2,7 +2,7 @@
 """
 Created on Mon July 20 2020
 
-@author: Raluca Sandu
+@author: Raluca Sandu, Iwan Paolucci
 """
 
 import argparse
@@ -48,7 +48,7 @@ def get_args():
         ap.add_argument("-p", "--patient-id", required=False, help="patient id from study")
         ap.add_argument("-i", "--lesion-id", required=False, help="lesion id")
         ap.add_argument("-d", "--ablation-date", required=False, help="ablation date from study")
-        ap.add_argument("-o", "--OUTPUT", required=False, help="output file (csv)")
+        ap.add_argument("-o", "--OUTPUT", required=False, help="output filename (csv)")
         ap.add_argument("-r", "--DIR", required=False, help="directory path to write plots and csv")
         args = vars(ap.parse_args())
     return args
@@ -77,7 +77,7 @@ if __name__ == '__main__':
         csv_dir = 'surface_distances_csv'
         if not os.path.exists(csv_dir):
             os.mkdir(csv_dir)
-        output_file = os.path.join(csv_dir, str(patient_id) + '_' + str(lesion_id) + '_surface_distances.csv')
+        output_file = os.path.join(csv_dir, str(patient_id) + '_' + str(lesion_id) + '_surface_distances.xlsx')
     if dir_path is None:
         dir_path = 'figures'
         if not os.path.exists(dir_path):
@@ -91,9 +91,11 @@ if __name__ == '__main__':
         sys.exit()
     ablation, ablation_np = load_image(ablation_file)
     has_ablation_segmented = np.sum(ablation_np.astype(np.uint8)) > 0
+
     if has_ablation_segmented is False:
         print('No ablation segmentation mask found in the file provided...program exiting')
         sys.exit()
+
     if liver_file is not None:
         # load the image file
         liver, liver_np = load_image(liver_file)
@@ -106,21 +108,45 @@ if __name__ == '__main__':
     pixdim = ablation.header['pixdim']
     spacing = (pixdim[1], pixdim[2], pixdim[3])
     # compute the surface distances based on tumor and ablation segmentations
-    surface_distance = compute_distances(tumor_np, ablation_np,
+    surface_distance = compute_distances(mask_gt=tumor_np, mask_pred=ablation_np,
                                          exclusion_zone=liver_np if has_liver_segmented else None,
                                          spacing_mm=spacing, connectivity=1, crop=True)
 
     if surface_distance['distances_gt_to_pred'].size > 0:
-        # surface distances returned are not empty
-        pm.plot_histogram_surface_distances(patient_id, lesion_id, dir_path,
-                                            distance_map=surface_distance['distances_gt_to_pred'],
-                                            num_voxels=len(surface_distance['distances_gt_to_pred']),
-                                            title='Quantitative Ablation Margin', ablation_date=ablation_date)
+        # if surface distances returned are not empty
+        non_ablated, insuffiecient_ablated, completely_ablated =\
+            pm.plot_histogram_surface_distances(patient_id, lesion_id, dir_path,
+                                                distance_map=surface_distance['distances_gt_to_pred'],
+                                                num_voxels=len(surface_distance['distances_gt_to_pred']),
+                                                title='Quantitative Ablation Margin',
+                                                ablation_date=ablation_date)
         df = pd.DataFrame(data={
             'Patient': [patient_id] * len(surface_distance['distances_gt_to_pred']),
             'Lesion': [lesion_id] * len(surface_distance['distances_gt_to_pred']),
             'Distances': surface_distance['distances_gt_to_pred']})
-        df.to_csv(output_file, index=False)
+
+        writer = pd.ExcelWriter(output_file)
+        df.to_excel(writer, sheet_name='surface_distances', index=False, float_format='%.4f')
+        max_distance = np.nanmax(surface_distance['distances_gt_to_pred'])
+        min_distance = np.nanmin(surface_distance['distances_gt_to_pred'])
+        q25_distance = np.nanquantile(surface_distance['distances_gt_to_pred'], 0.25)
+        median_distance = np.nanmedian(surface_distance['distances_gt_to_pred'])
+        q75_distance = np.nanquantile(surface_distance['distances_gt_to_pred'], 0.75)
+
+        patient_data = {'Patient': patient_id,
+                        'Lesion': lesion_id,
+                        'max_distance': max_distance,
+                        'min_distance': min_distance,
+                        'q25_distance': q25_distance,
+                        'median_distance': median_distance,
+                        'q75_distance': q75_distance,
+                        'x_less_than_0mm': non_ablated,
+                        'x_equal_greater_than_0m': insuffiecient_ablated,
+                        'x_equal_greater_than_5m': completely_ablated}
+
+        df_percentages_coverage = pd.DataFrame([patient_data])
+        df_percentages_coverage.to_excel(writer, sheet_name='percentages_coverage', index=False, float_format='%.4f')
+        writer.save()
 
     else:
         print('No surface distance computed for patient ' + str(patient_id) + ' lesion ' + str(

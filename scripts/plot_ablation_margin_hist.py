@@ -99,10 +99,14 @@ def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map,
     # %% save the fig to disk as png and eps
     figName_hist = 'Pat_' + str(pat_name) + '_Lesion' + str(
         lesion_id) + '_AblationDate_' + ablation_date + '_histogram'
-    plt.title(title + '. Case ' + str(pat_name) + '. Lesion ' + str(lesion_id), fontsize=fontsize)
+    # plt.title(title + '. Case ' + str(pat_name) + '. Lesion ' + str(lesion_id), fontsize=fontsize)
+    plt.title(title + '. Case ' + str(pat_name) , fontsize=fontsize)
+
     figpathHist = os.path.join(rootdir, figName_hist)
     ax.set_rasterized(True)
     plt.savefig(figpathHist, dpi=600, bbox_inches='tight')
     plt.savefig(figpathHist + '.svg', dpi=600)
 
     plt.close()
+
+    return sum_perc_nonablated, sum_perc_insuffablated, sum_perc_ablated
