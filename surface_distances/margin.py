@@ -1,14 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon July 20 2020
-
-@author: Iwan Paolucci, Raluca Sandu
-"""
-
 import numpy as np
 from scipy import ndimage
-import matplotlib.pyplot as plt
-import nibabel as nib
 
 
 def compute_bounding_box(mask_gt, mask_pred, exclusion_zone):
@@ -36,26 +27,19 @@ def compute_bounding_box(mask_gt, mask_pred, exclusion_zone):
     bbox_min[2] = np.min(idx_nonzero_2)
     bbox_max[2] = np.max(idx_nonzero_2)
 
-
     return bbox_min, bbox_max
 
 
 def crop_mask(mask, bbox_min, bbox_max):
-
     cropmask = np.zeros((bbox_max - bbox_min) + 2)
 
     cropmask[0:-1, 0:-1, 0:-1] = mask[bbox_min[0]:bbox_max[0] + 1,
                                  bbox_min[1]:bbox_max[1] + 1,
                                  bbox_min[2]:bbox_max[2] + 1]
-    # TODO:  This is correct only if the object is interior to the bounding box. Must perform testing.
-    # crop the processing subvolume.
-    # we need to zeropad the cropped region with 1 voxel at the lower,
-    # the right and the back side. This is required to obtain the "full"
-    # convolution result with the 2x2x2 kernel
     return cropmask
 
 
-def compute_distances(mask_gt, mask_pred, exclusion_zone, spacing_mm, connectivity=1, crop=True, exclusion_distance=5):
+def compute_distances(mask_gt, mask_pred, exclusion_zone, spacing_mm, connectivity=1, crop=True):
     if crop:
         if exclusion_zone is not None:
             bbox_min, bbox_max = compute_bounding_box(mask_gt, mask_pred, exclusion_zone)
@@ -68,11 +52,11 @@ def compute_distances(mask_gt, mask_pred, exclusion_zone, spacing_mm, connectivi
             mask_pred = crop_mask(mask_pred, bbox_min, bbox_max).astype(np.bool)
 
     border_inside = ndimage.binary_erosion(mask_gt, structure=ndimage.generate_binary_structure(3, connectivity))
-    borders_gt = mask_gt ^ border_inside  # contours
-
+    borders_gt = mask_gt ^ border_inside
     border_inside = ndimage.binary_erosion(mask_pred, structure=ndimage.generate_binary_structure(3, connectivity))
-    borders_pred = mask_pred ^ border_inside  # contours
+    borders_pred = mask_pred ^ border_inside
 
+    # compute the distance transform (closest distance of each voxel to the surface voxels)
     if borders_gt.any():
         distmap_gt = ndimage.morphology.distance_transform_edt(
             ~borders_gt, sampling=spacing_mm)
@@ -85,9 +69,7 @@ def compute_distances(mask_gt, mask_pred, exclusion_zone, spacing_mm, connectivi
     if borders_pred.any():
         distmap_pred = ndimage.morphology.distance_transform_edt(
             ~borders_pred, sampling=spacing_mm)
-
         distmask_pred = mask_pred.astype(np.int8)
-        # mark outside zones with -1
         distmask_pred[distmask_pred == 0] = -1
         distmap_pred *= distmask_pred
     else:
@@ -101,12 +83,11 @@ def compute_distances(mask_gt, mask_pred, exclusion_zone, spacing_mm, connectivi
             ~borders_exclusion, sampling=spacing_mm)
 
         distmask_exclusion = exclusion_zone.astype(np.int8)
-        # mark outside zones with -1
         distmask_exclusion[distmask_exclusion == 0] = -1
         distmap_exclusion *= distmask_exclusion
 
-        borders_pred[distmap_exclusion < exclusion_distance] = 0
-        borders_gt[distmap_exclusion < exclusion_distance] = 0
+        borders_pred[distmap_exclusion < 5] = 0
+        borders_gt[distmap_exclusion < 5] = 0
 
     # create a list of all surface elements with distance and area
     distances_gt_to_pred = distmap_pred[borders_gt > 0]
