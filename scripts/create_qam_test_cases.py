@@ -79,33 +79,33 @@ if __name__ == '__main__':
         os.mkdir(TEST_DATA_PATH)
 
     # %% Non-Subcapsular Cases
-    # perfect overlap , radius_ablation=radius_tumor=5)
-    data_tumor = create_sphere((256, 256, 256), 5, (50, 50, 50))
-    data_ablation = create_sphere((256, 256, 256), 5, (50, 50, 50))
+    # perfect overlap , radius_ablation=radius_tumor=10)
+    data_tumor = create_sphere((256, 256, 256), 10, (50, 50, 50))
+    data_ablation = create_sphere((256, 256, 256), 10, (50, 50, 50))
     data_liver = create_sphere((256, 256, 256), 10, (0, 0, 0))
     # replace everything with False for liver
     data_liver[data_liver == True] = False
     save_test_case(data_tumor, data_ablation, data_liver, TEST_DATA_PATH, 'T01', 'perfect_overlap_0mm_margin')
 
     # centered, radius_ablation=10 mm, radius_tumor=5mm, QAM=5
-    data_tumor = create_sphere((256, 256, 256), 5, (50, 50, 50))
-    data_ablation = create_sphere((256, 256, 256), 10, (50, 50, 50))
+    data_tumor = create_sphere((256, 256, 256), 10, (50, 50, 50))
+    data_ablation = create_sphere((256, 256, 256), 15, (50, 50, 50))
     data_liver = create_sphere((256, 256, 256), 10, (0, 0, 0))
     # replace everything with False for liver
     data_liver[data_liver == True] = False
     save_test_case(data_tumor, data_ablation, data_liver, TEST_DATA_PATH, 'T01', 'perfect_overlap_5mm_margin')
 
     # centered, radius_ablation=5mm, radius_tumor=10, QAM=-5
-    data_tumor = create_sphere((256, 256, 256), 10, (50, 50, 50))
-    data_ablation = create_sphere((256, 256, 256), 5, (50, 50, 50))
+    data_tumor = create_sphere((256, 256, 256), 15, (50, 50, 50))
+    data_ablation = create_sphere((256, 256, 256), 10, (50, 50, 50))
     data_liver = create_sphere((256, 256, 256), 10, (0, 0, 0))
     # replace everything with False for liver
     data_liver[data_liver == True] = False
     save_test_case(data_tumor, data_ablation, data_liver, TEST_DATA_PATH, 'T01', 'perfect_overlap_-5mm_margin')
 
     # centered, radius_ablation=15mm, radius_tumor=5, QAM=10
-    data_tumor = create_sphere((256, 256, 256), 5, (50, 50, 50))
-    data_ablation = create_sphere((256, 256, 256), 15, (50, 50, 50))
+    data_tumor = create_sphere((256, 256, 256), 10, (50, 50, 50))
+    data_ablation = create_sphere((256, 256, 256), 20, (50, 50, 50))
     data_liver = create_sphere((256, 256, 256), 15, (0, 0, 0))
     # replace everything with False for liver
     data_liver[data_liver == True] = False
@@ -198,18 +198,18 @@ if __name__ == '__main__':
     data_ablation = create_sphere((256, 256, 256), 15, (50, 50, 55))
     data_liver = create_sphere((256, 256, 256), 40, (80, 50, 50))
     save_test_case(data_tumor, data_ablation, data_liver, TEST_DATA_PATH, 'T02',
-                   'shifted_ablation_5mm_z_margin_2mmLiver_subcapsular')
+                   'shifted_ablation_5mm_z_margin_subcapsular')
 
     # shifted y 5mm
     data_tumor = create_sphere((256, 256, 256), 10, (50, 50, 50))
     data_ablation = create_sphere((256, 256, 256), 15, (50, 55, 50))
     data_liver = create_sphere((256, 256, 256), 40, (80, 50, 50))
     save_test_case(data_tumor, data_ablation, data_liver, TEST_DATA_PATH, 'T02',
-                   'shifted_ablation_5mm_y_margin_2mmLiver_subcapsular')
+                   'shifted_ablation_5mm_y_margin_subcapsular')
 
     # shifted x 5mm
     data_tumor = create_sphere((256, 256, 256), 10, (50, 50, 50))
     data_ablation = create_sphere((256, 256, 256), 15, (55, 50, 50))
     data_liver = create_sphere((256, 256, 256), 40, (80, 50, 50))
     save_test_case(data_tumor, data_ablation, data_liver, TEST_DATA_PATH, 'T02',
-                   'shifted_5mm_x_margin_2mmLiver_subcapsular')
+                   'shifted_5mm_x_margin_subcapsular')
