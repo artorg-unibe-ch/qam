@@ -31,17 +31,14 @@ def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map,
     :return:
     """
     fontsize = 20
-    try:
-        lesion_id_str = str(lesion_id)
-        lesion_id = lesion_id_str.split('.')[0]
-    except Exception:
-        pass
-        # lesion id is either not a string, nor it contains numerical characters. do nothing
+
+    fig, ax = plt.subplots(figsize=(12, 10))
     min_val = int(np.floor(min(distance_map)))
     max_val = int(np.ceil(max(distance_map)))
-    fig, ax = plt.subplots(figsize=(12, 10))
 
-    col_height, bins, patches = ax.hist(distance_map, ec='black', bins=range(min_val - 1, max_val + 1))
+    bins = np.arange(min_val, max_val + 1.5, 1)
+    # bins = range(min_val - 1, max_val + 1)
+    col_height, bins, patches = ax.hist(distance_map, ec='black', align='mid', bins=bins)
 
     voxels_nonablated = []
     voxels_insuffablated = []
@@ -50,7 +47,7 @@ def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map,
     for b, p, col_val in zip(bins, patches, col_height):
         if b < 0:
             voxels_nonablated.append(col_val)
-        elif 0 <= b < 5:
+        elif 0 <= b < 5 :
             voxels_insuffablated.append(col_val)
         elif b >= 5:
             voxels_ablated.append(col_val)
@@ -65,13 +62,13 @@ def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map,
     sum_perc_ablated = ((voxels_ablated / num_voxels) * 100).sum()
     # %% iterate through the bins to change the colors of the patches bases on the range [mm]
     for b, p, col_val in zip(bins, patches, col_height):
-        if b < 0:
+        if b < 0 and col_val > 0:
             plt.setp(p, 'facecolor', cmap[3],
                      label='Ablation Margin ' + r'$x < 0$' + 'mm :' + " %.2f" % sum_perc_nonablated + '%')
-        elif 0 <= b < 5:
+        elif 0 <= b < 5 and col_val > 0:
             plt.setp(p, 'facecolor', cmap[8],
                      label='Ablation Margin ' + r'$0 \leq x < 5$' + 'mm: ' + "%.2f" % sum_perc_insuffablated + '%')
-        elif b >= 5:
+        elif b >= 5 and col_val > 0:
             plt.setp(p, 'facecolor', cmap[2],
                      label='Ablation Margin ' + r'$x \geq 5$' + 'mm: ' + " %.2f" % sum_perc_ablated + '%')
     # %% edit the axes limits and labels
@@ -79,7 +76,7 @@ def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map,
     plt.tick_params(labelsize=fontsize, color='black')
     ax.tick_params(colors='black', labelsize=fontsize)
     ax.set_xlim([-15, 15])
-
+    # ax.set_ylim([0, 310])
     # edit the y-ticks: change to percentage of surface
     yticks, locs = plt.yticks()
     percent = (yticks / num_voxels) * 100
@@ -97,15 +94,14 @@ def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map,
     ax.tick_params(axis='both', labelsize=fontsize)
     ax.grid(False)
     # %% save the fig to disk as png and eps
-    figName_hist = 'Pat_' + str(pat_name) + '_Lesion' + str(
-        lesion_id) + '_AblationDate_' + ablation_date + '_histogram'
-    # plt.title(title + '. Case ' + str(pat_name) + '. Lesion ' + str(lesion_id), fontsize=fontsize)
-    plt.title(title + '. Case ' + str(pat_name) , fontsize=fontsize)
-
-    figpathHist = os.path.join(rootdir, figName_hist)
+    fig_name_hist = 'Pat_' + str(pat_name) + '_Lesion' + str(
+        lesion_id[4]) + '_AblationDate_' + ablation_date + '_histogram'
+    plt.title(title + '. Case ' + str(pat_name) + '. Lesion ' + str(lesion_id), fontsize=fontsize)
+    # plt.title(title + '. Lesion ' + str(lesion_id), fontsize=fontsize)
+    figpath_hist = os.path.join(rootdir, fig_name_hist)
     ax.set_rasterized(True)
-    plt.savefig(figpathHist, dpi=600, bbox_inches='tight')
-    plt.savefig(figpathHist + '.svg', dpi=600)
+    plt.savefig(figpath_hist + '.png', dpi=600, bbox_inches='tight')
+    plt.savefig(figpath_hist + '.svg', dpi=600)
 
     plt.close()
 
