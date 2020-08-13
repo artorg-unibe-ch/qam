@@ -22,3 +22,6 @@ Example:
     if surface_distance['distances_gt_to_pred'].size > 0:
          borders_gt = nib.Nifti1Image(surface_distance["borders_gt"].astype(np.uint8), affine=tumor.affine)
          nib.save(borders_gt, "borders_gt.nii.gz")
+The "borders_gt.nii.gz" contour (purple) can be overlayed over the tumor segmentation (white circle): 
+
+![image](https://user-images.githubusercontent.com/20581812/90117807-a8140900-dd57-11ea-8d9b-200fbd3146c5.png)
