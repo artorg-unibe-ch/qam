@@ -39,7 +39,7 @@ def crop_mask(mask, bbox_min, bbox_max):
     return cropmask
 
 
-def compute_distances(mask_gt, mask_pred, exclusion_zone, spacing_mm, connectivity=1, crop=True):
+def compute_distances(mask_gt, mask_pred, exclusion_zone, spacing_mm, connectivity=1, crop=False):
     if crop:
         if exclusion_zone is not None:
             bbox_min, bbox_max = compute_bounding_box(mask_gt, mask_pred, exclusion_zone)
