@@ -95,8 +95,8 @@ def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map,
     ax.grid(False)
     # %% save the fig to disk as png and eps
     fig_name_hist = 'Pat_' + str(pat_name) + '_Lesion' + str(
-        lesion_id[4]) + '_AblationDate_' + ablation_date + '_histogram'
-    plt.title(title + '. Case ' + str(pat_name) + '. Lesion ' + str(lesion_id), fontsize=fontsize)
+        lesion_id) + '_AblationDate_' + ablation_date + '_histogram'
+    plt.title(title + '. Case ' + str(pat_name) + '. Tumor ' + str(lesion_id), fontsize=fontsize)
     # plt.title(title + '. Lesion ' + str(lesion_id), fontsize=fontsize)
     figpath_hist = os.path.join(rootdir, fig_name_hist)
     ax.set_rasterized(True)
