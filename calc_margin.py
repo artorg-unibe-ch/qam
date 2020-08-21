@@ -110,7 +110,7 @@ if __name__ == '__main__':
     # compute the surface distances based on tumor and ablation segmentations
     surface_distance = compute_distances(mask_gt=tumor_np, mask_pred=ablation_np,
                                          exclusion_zone=liver_np if has_liver_segmented else None,
-                                         spacing_mm=spacing, connectivity=1, crop=True)
+                                         spacing_mm=spacing, connectivity=1, crop=False)
 
     if surface_distance['distances_gt_to_pred'].size > 0:
         # if surface distances returned are not empty

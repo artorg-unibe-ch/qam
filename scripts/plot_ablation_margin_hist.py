@@ -47,7 +47,7 @@ def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map,
     for b, p, col_val in zip(bins, patches, col_height):
         if b < 0:
             voxels_nonablated.append(col_val)
-        elif 0 <= b < 5 :
+        elif 0 <= b < 5:
             voxels_insuffablated.append(col_val)
         elif b >= 5:
             voxels_ablated.append(col_val)
@@ -76,7 +76,7 @@ def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map,
     plt.tick_params(labelsize=fontsize, color='black')
     ax.tick_params(colors='black', labelsize=fontsize)
     ax.set_xlim([-15, 15])
-    # ax.set_ylim([0, 310])
+
     # edit the y-ticks: change to percentage of surface
     yticks, locs = plt.yticks()
     percent = (yticks / num_voxels) * 100
@@ -97,7 +97,6 @@ def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map,
     fig_name_hist = 'Pat_' + str(pat_name) + '_Lesion' + str(
         lesion_id[4]) + '_AblationDate_' + ablation_date + '_histogram'
     plt.title(title + '. Case ' + str(pat_name) + '. Lesion ' + str(lesion_id), fontsize=fontsize)
-    # plt.title(title + '. Lesion ' + str(lesion_id), fontsize=fontsize)
     figpath_hist = os.path.join(rootdir, fig_name_hist)
     ax.set_rasterized(True)
     plt.savefig(figpath_hist + '.png', dpi=600, bbox_inches='tight')
