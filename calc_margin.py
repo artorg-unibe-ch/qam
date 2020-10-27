@@ -13,44 +13,23 @@ from datetime import date
 import numpy as np
 import pandas as pd
 
-import scripts.plot_ablation_margin_hist as pm
-from surface_distances.margin import compute_distances
+import qam.plotting as pm
+from qam.margin import compute_distances
 from utils.niftireader import load_image
 
 np.set_printoptions(suppress=True, precision=4)
 today = date.today()
 
-
-def is_running_in_snakemake():
-    try:
-        snakemake
-        return True
-    except NameError:
-        return False
-
-
 def get_args():
-    if is_running_in_snakemake():
-        # noinspection PyUnresolvedReferences
-        args = {
-            'tumor': snakemake.input['tumor'],
-            'ablation': snakemake.input['ablation'],
-            'liver': snakemake.input['liver'],
-            'patient_id': snakemake.params['patient_id'],
-            'lesion_id': snakemake.params['lesion_id'],
-            'OUTPUT': snakemake.output[0]
-        }
-    else:
-        ap = argparse.ArgumentParser()
-        ap.add_argument("-t", "--tumor", required=True, help="path to the tumor segmentation")
-        ap.add_argument("-a", "--ablation", required=True, help="path to the ablation segmentation")
-        ap.add_argument("-l", "--liver", required=False, help="path to the liver segmentation")
-        ap.add_argument("-p", "--patient-id", required=False, help="patient id from study")
-        ap.add_argument("-i", "--lesion-id", required=False, help="lesion id")
-        ap.add_argument("-d", "--ablation-date", required=False, help="ablation date from study")
-        ap.add_argument("-o", "--OUTPUT", required=False, help="output filename (csv)")
-        ap.add_argument("-r", "--DIR", required=False, help="directory path to write plots and csv")
-        args = vars(ap.parse_args())
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-t", "--tumor", required=True, help="path to the tumor segmentation")
+    ap.add_argument("-a", "--ablation", required=True, help="path to the ablation segmentation")
+    ap.add_argument("-l", "--liver", required=False, help="path to the liver segmentation")
+    ap.add_argument("-p", "--patient-id", required=False, help="patient id from study")
+    ap.add_argument("-i", "--lesion-id", required=False, help="lesion id")
+    ap.add_argument("-d", "--ablation-date", required=False, help="ablation date from study")
+    ap.add_argument("-o", "--OUTPUT", required=False, help="output filename (csv)")
+    args = vars(ap.parse_args())
     return args
 
 
@@ -63,8 +42,7 @@ if __name__ == '__main__':
     patient_id = args['patient_id']
     lesion_id = args['lesion_id']
     ablation_date = args['ablation_date']
-    output_file = args['OUTPUT']
-    dir_path = args['DIR']
+    output_dir = args['OUTPUT']
 
     # check whether the input has been provided
     if patient_id is None:
@@ -73,15 +51,11 @@ if __name__ == '__main__':
         lesion_id = 1
     if ablation_date is None:
         ablation_date = today.strftime("%d-%m-%Y")
-    if output_file is None:
-        csv_dir = 'surface_distances_csv'
-        if not os.path.exists(csv_dir):
-            os.mkdir(csv_dir)
-        output_file = os.path.join(csv_dir, str(patient_id) + '_' + str(lesion_id) + '_surface_distances.xlsx')
-    if dir_path is None:
-        dir_path = 'figures'
-        if not os.path.exists(dir_path):
-            os.mkdir(dir_path)
+    
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+    output_file_csv = os.path.join(output_dir, str(patient_id) + '_' + str(lesion_id) + '_surface_distances.xlsx')
+    output_file_png = os.path.join(output_dir, str(patient_id) + '_' + str(lesion_id) + '_surface_distances.png')
 
     tumor, tumor_np = load_image(tumor_file)
     # check if there is actually a segmentation in the file
@@ -115,9 +89,8 @@ if __name__ == '__main__':
     if surface_distance['distances_gt_to_pred'].size > 0:
         # if surface distances returned are not empty
         non_ablated, insuffiecient_ablated, completely_ablated =\
-            pm.plot_histogram_surface_distances(patient_id, lesion_id, dir_path,
+            pm.plot_histogram_surface_distances(patient_id, lesion_id, output_file_png,
                                                 distance_map=surface_distance['distances_gt_to_pred'],
-                                                num_voxels=len(surface_distance['distances_gt_to_pred']),
                                                 title='Quantitative Ablation Margin',
                                                 ablation_date=ablation_date)
         df = pd.DataFrame(data={
@@ -125,7 +98,7 @@ if __name__ == '__main__':
             'Lesion': [lesion_id] * len(surface_distance['distances_gt_to_pred']),
             'Distances': surface_distance['distances_gt_to_pred']})
 
-        writer = pd.ExcelWriter(output_file)
+        writer = pd.ExcelWriter(output_file_csv)
         df.to_excel(writer, sheet_name='surface_distances', index=False, float_format='%.4f')
         max_distance = np.nanmax(surface_distance['distances_gt_to_pred'])
         min_distance = np.nanmin(surface_distance['distances_gt_to_pred'])

@@ -135,3 +135,4 @@ db.sqlite3
 /data
 /surface_distances_csv
 /test_data
+_output/
