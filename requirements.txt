@@ -39,3 +39,4 @@ toposort==1.5
 traitlets==4.3.3
 urllib3==1.25.9
 wrapt==1.12.1
+vtk==9.0.1

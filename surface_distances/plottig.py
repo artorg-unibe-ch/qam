@@ -18,7 +18,7 @@ np.seterr(divide='ignore', invalid='ignore')
 cmap = sns.color_palette("colorblind")  # colorblind friendly palette
 
 
-def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map, num_voxels, title, ablation_date):
+def plot_histogram_surface_distances(pat_name, lesion_id, output_file, distance_map, title, ablation_date, print_case_details=True):
     """
 
     :param pat_name:
@@ -33,8 +33,12 @@ def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map,
     fontsize = 20
 
     fig, ax = plt.subplots(figsize=(12, 10))
-    min_val = int(np.floor(min(distance_map)))
-    max_val = int(np.ceil(max(distance_map)))
+    if len(distance_map) == 0:
+        min_val = -15
+        max_val = 15
+    else:
+        min_val = int(np.floor(min(distance_map)))
+        max_val = int(np.ceil(max(distance_map)))
 
     bins = np.arange(min_val, max_val + 1.5, 1)
     # bins = range(min_val - 1, max_val + 1)
@@ -51,6 +55,8 @@ def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map,
             voxels_insuffablated.append(col_val)
         elif b >= 5:
             voxels_ablated.append(col_val)
+
+    num_voxels = np.sum(voxels_ablated) + np.sum(voxels_insuffablated) + np.sum(voxels_nonablated)
 
     # %% calculate the total percentage of surface for ablated, non-ablated, insufficiently ablated
     voxels_nonablated = np.asarray(voxels_nonablated)
@@ -94,13 +100,18 @@ def plot_histogram_surface_distances(pat_name, lesion_id, rootdir, distance_map,
     ax.tick_params(axis='both', labelsize=fontsize)
     ax.grid(False)
     # %% save the fig to disk as png and eps
-    fig_name_hist = 'Pat_' + str(pat_name) + '_Lesion' + str(
-        lesion_id[4]) + '_AblationDate_' + ablation_date + '_histogram'
-    plt.title(title + '. Case ' + str(pat_name) + '. Lesion ' + str(lesion_id), fontsize=fontsize)
-    figpath_hist = os.path.join(rootdir, fig_name_hist)
+    # fig_name_hist = 'Pat_' + str(pat_name) + '_Lesion' + str(
+    #     lesion_id) + '_AblationDate_' + ablation_date + '_histogram'
+    if print_case_details:
+        plt.title(title + '. Case ' + str(pat_name) + '. Lesion ' + str(lesion_id), fontsize=fontsize)
+    else:
+        plt.title(title, fontsize=fontsize)
+    # plt.title(title + '. Lesion ' + str(lesion_id), fontsize=fontsize)
+    # figpath_hist = os.path.join(rootdir, fig_name_hist)
     ax.set_rasterized(True)
-    plt.savefig(figpath_hist + '.png', dpi=600, bbox_inches='tight')
-    plt.savefig(figpath_hist + '.svg', dpi=600)
+    plt.savefig(output_file, dpi=600, bbox_inches='tight')
+    plt.savefig(output_file + '.svg', dpi=600)
+    plt.savefig(output_file + '.eps')
 
     plt.close()
 

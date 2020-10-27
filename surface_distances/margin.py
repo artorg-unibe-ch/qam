@@ -1,6 +1,6 @@
 import numpy as np
 from scipy import ndimage
-
+import pandas as pd
 
 def compute_bounding_box(mask_gt, mask_pred, exclusion_zone):
     mask_all = mask_gt | mask_pred
@@ -39,7 +39,7 @@ def crop_mask(mask, bbox_min, bbox_max):
     return cropmask
 
 
-def compute_distances(mask_gt, mask_pred, exclusion_zone, spacing_mm, connectivity=1, crop=True):
+def compute_distances(mask_gt, mask_pred, exclusion_zone, spacing_mm, connectivity=1, crop=True, exclusion_distance=5):
     if crop:
         if exclusion_zone is not None:
             bbox_min, bbox_max = compute_bounding_box(mask_gt, mask_pred, exclusion_zone)
@@ -86,8 +86,8 @@ def compute_distances(mask_gt, mask_pred, exclusion_zone, spacing_mm, connectivi
         distmask_exclusion[distmask_exclusion == 0] = -1
         distmap_exclusion *= distmask_exclusion
 
-        borders_pred[distmap_exclusion < 5] = 0
-        borders_gt[distmap_exclusion < 5] = 0
+        borders_pred[distmap_exclusion < exclusion_distance] = 0
+        borders_gt[distmap_exclusion < exclusion_distance] = 0
 
     # create a list of all surface elements with distance and area
     distances_gt_to_pred = distmap_pred[borders_gt > 0]
@@ -102,3 +102,31 @@ def compute_distances(mask_gt, mask_pred, exclusion_zone, spacing_mm, connectivi
             "distmask_pred": distmask_pred,
             "border_exclusion": borders_exclusion if exclusion_zone is not None else None,
             "distmap_exclusion": distmap_exclusion if exclusion_zone is not None else None}
+
+def summarize(patient_id, lesion_id, surface_distance):
+    distances = surface_distance['distances_gt_to_pred']
+    nr_voxels = len(distances)
+    min_distance = np.nanmin(distances)
+    q25_distance = np.nanquantile(distances, 0.25)
+    median_distance = np.nanmedian(distances)
+    q75_distance = np.nanquantile(distances, 0.75)
+    max_distance = np.nanmax(distances)
+
+    non_ablated = np.sum(distances < 0.0) / nr_voxels
+    insuffiecient_ablated = np.sum(distances < 5.0) / nr_voxels
+    completely_ablated = np.sum(distances >= 5.0) / nr_voxels
+
+    coverage_data = {'Patient': patient_id,
+                    'Lesion': lesion_id,
+                    'nr_voxels': nr_voxels,
+                    'min_distance': min_distance,
+                    'q25_distance': q25_distance,
+                    'median_distance': median_distance,
+                    'q75_distance': q75_distance,
+                    'max_distance': max_distance,
+                    'x_less_than_0mm': non_ablated,
+                    'x_equal_greater_than_0m': insuffiecient_ablated,
+                    'x_equal_greater_than_5m': completely_ablated}
+
+    df = pd.DataFrame([coverage_data])
+    return df
