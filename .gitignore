@@ -132,7 +132,5 @@ db.sqlite3
 *.task
 
 # Data
-/data
-/surface_distances_csv
-/test_data
+tests/test_data/
 _output/
