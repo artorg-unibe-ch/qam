@@ -1,27 +1,40 @@
-# qam
-Library to compute 3D surface-distances between max. 3 binary segmentation images.
+# Quantiative Ablation Margin (QAM)
+Library to compute 3D surface-distances between a tumor and an ablation volume.
 
 
 
 You can find more about ablation treatments for liver cancer in the following open access book chapter ["Stereotactic Image-Guidance for Ablation of Malignant Liver Tumors"](https://www.intechopen.com/online-first/stereotactic-image-guidance-for-ablation-of-malignant-liver-tumors) from Liver Pathology.
 
 
-![image](https://user-images.githubusercontent.com/20581812/88671582-c38bdc80-d0e6-11ea-9dc8-325ca8a878c1.png)
+![image](https://api.intechopen.com/media/chapter/69658/media/F1.png)
 
 
-We used an adapted Dice Soerensen coefficient to evaluate the ablation completness in treating liver tumors. The quantitative ablation margin (QAM) calculation is illustrated  in the next figure. The output is an array of 3D surface distances that can also be visualized as traffic-light colored histogram (see last step in the pipeline).
-![image](https://user-images.githubusercontent.com/20581812/88669690-80306e80-d0e4-11ea-8524-494217bd58f5.png)
+We used an adapted Dice Soerensen coefficient to evaluate the ablation completeness in treating liver tumors. The quantitative ablation margin (QAM) calculation is illustrated  in the next figure. The output is an array of 3D surface distances that can also be visualized as traffic-light colored histogram (see last step in the pipeline).
+![image](docs/img/Figure_1.JPG)
 
-To save the contours and the distance map for overlaying on the (segmentation images), the affine transform must be the same as the source image and crop must be set to False.
-Example:
+## Installation
 
-    surface_distance = compute_distances(mask_gt=tumor_np, mask_pred=ablation_np,
-                                         exclusion_zone=liver_np if has_liver_segmented else None,
-                                         spacing_mm=spacing, connectivity=1, crop=False)
+The library can be installed via pip from the GitHub repository
 
-    if surface_distance['distances_gt_to_pred'].size > 0:
-         borders_gt = nib.Nifti1Image(surface_distance["borders_gt"].astype(np.uint8), affine=tumor.affine)
-         nib.save(borders_gt, "borders_gt.nii.gz")
-The "borders_gt.nii.gz" contour (purple) can be overlayed over the tumor segmentation (white circle): 
+    python -m pip install https://github.com/artorg-unibe-ch/qam.git
 
-![image](https://user-images.githubusercontent.com/20581812/90117807-a8140900-dd57-11ea-8d9b-200fbd3146c5.png)
+## Usage
+Import the packages
+
+    from qam import margin, plotting, visualization
+
+To calculate the ablation margin one needs a segmentation mask of the tumor, ablation, and (optional) liver. All images need to be in the same spacing, and co-registered.
+
+    distances = margin.compute_distances(tumor, ablation, liver, spacing_mm)
+    df = margin.summarize(subject_id, lesion_id, distances)
+
+To plot the margin as a histogram:
+
+    non_ablated, insuffiecient_ablated, completely_ablated =\
+    plotting.plot_histogram_surface_distances(subject_id, lesion_id, output_file_png,
+                                        distance_map=distances['distances_gt_to_pred'],
+                                        title='Quantitative Ablation Margin')
+
+To visualize the margin in 3D, the NIFTI files can be passed directly:
+
+    visualization.visualize_3d_margin(tumor_nii, ablation_nii, output_file_wrl)
