@@ -25,16 +25,19 @@ Import the packages
 
 To calculate the ablation margin one needs a segmentation mask of the tumor, ablation, and (optional) liver. All images need to be in the same spacing, and co-registered.
 
-    distances = margin.compute_distances(tumor, ablation, liver, spacing_mm)
-    df = margin.summarize(subject_id, lesion_id, distances)
+    calc_margin.py -t tumor_file -a ablation_file -l liver_file -o output_filename -p patient_id
 
 To plot the margin as a histogram:
 
     non_ablated, insuffiecient_ablated, completely_ablated =\
-    plotting.plot_histogram_surface_distances(subject_id, lesion_id, output_file_png,
-                                        distance_map=distances['distances_gt_to_pred'],
-                                        title='Quantitative Ablation Margin')
+    plotting.plot_histogram_surface_distances(pat_name=patient_id, lesion_id=lesion_id,
+                                                output_file=output_file_png,
+                                                distance_map=surface_distance['distances_gt_to_pred'],
+                                                title='Quantitative Ablation Margin',
+                                                print_case_details=True')
 
 To visualize the margin in 3D, the NIFTI files can be passed directly:
 
     visualization.visualize_3d_margin(tumor_nii, ablation_nii, output_file_wrl)
+    
+
