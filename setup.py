@@ -4,10 +4,10 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="quantitative-ablation-margin", # Replace with your own username
+    name="quantitative-ablation-margin",
     version="0.1.0",
-    author="Iwan Paolucci",
-    author_email="iwan.paolucci@artorg.unibe.ch",
+    author="Raluca M. Sandu",
+    author_email="raluca-sandu@rwth-aachen.de",
     description="Calculation and visualization of ablation margins",
     long_description=long_description,
     long_description_content_type="text/markdown",

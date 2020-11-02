@@ -2,7 +2,15 @@ import numpy as np
 from scipy import ndimage
 import pandas as pd
 
+
 def compute_bounding_box(mask_gt, mask_pred, exclusion_zone):
+    """
+
+    :param mask_gt:
+    :param mask_pred:
+    :param exclusion_zone:
+    :return:
+    """
     mask_all = mask_gt | mask_pred
     mask_all = mask_all | exclusion_zone
     bbox_min = np.zeros(3, np.int64)
@@ -40,6 +48,17 @@ def crop_mask(mask, bbox_min, bbox_max):
 
 
 def compute_distances(mask_gt, mask_pred, exclusion_zone, spacing_mm, connectivity=1, crop=True, exclusion_distance=5):
+    """
+    Function computing the surface distances between 2 binary segmentation Nifti images.
+    :param mask_gt: tumor file in Nifti (NiBabel) format
+    :param mask_pred: ablation file in Nifti (NiBabel) format
+    :param exclusion_zone: liver file Nifti (NiBabel) format
+    :param spacing_mm: spacing extracted from the Nifti files provided above. spacing should be the same for all.
+    :param connectivity: connectivity factor for defining the kernel size needed to extract the contours
+    :param crop: True (default) /False. Whether to crop the files around the ROI. When True computation time is faster.
+    :param exclusion_distance: The exclusion distance to "remove" voxels from the liver capsule within this distance. Works only for subcapsular cases when liver segmentation provided.
+    :return: Dictionary of Arrays containing the Surface Distances, Distance Maps and Border Values.
+    """
     if crop:
         if exclusion_zone is not None:
             bbox_min, bbox_max = compute_bounding_box(mask_gt, mask_pred, exclusion_zone)
@@ -103,7 +122,15 @@ def compute_distances(mask_gt, mask_pred, exclusion_zone, spacing_mm, connectivi
             "border_exclusion": borders_exclusion if exclusion_zone is not None else None,
             "distmap_exclusion": distmap_exclusion if exclusion_zone is not None else None}
 
-def summarize(patient_id, lesion_id, surface_distance):
+
+def summarize_surface_dists(patient_id, lesion_id, surface_distance):
+    """
+    Function summarizing the surface distances (descriptive stats).
+    :param patient_id: Patient Name
+    :param lesion_id: Lesion Number (e.g. 1, 2, 3)..
+    :param surface_distance: Dict Object containing all the surface distances.
+    :return:
+    """
     distances = surface_distance['distances_gt_to_pred']
     nr_voxels = len(distances)
     min_distance = np.nanmin(distances)
@@ -117,16 +144,16 @@ def summarize(patient_id, lesion_id, surface_distance):
     completely_ablated = np.sum(distances >= 5.0) / nr_voxels
 
     coverage_data = {'Patient': patient_id,
-                    'Lesion': lesion_id,
-                    'nr_voxels': nr_voxels,
-                    'min_distance': min_distance,
-                    'q25_distance': q25_distance,
-                    'median_distance': median_distance,
-                    'q75_distance': q75_distance,
-                    'max_distance': max_distance,
-                    'x_less_than_0mm': non_ablated,
-                    'x_equal_greater_than_0m': insuffiecient_ablated,
-                    'x_equal_greater_than_5m': completely_ablated}
+                     'Lesion': lesion_id,
+                     'nr_voxels': nr_voxels,
+                     'min_distance': min_distance,
+                     'q25_distance': q25_distance,
+                     'median_distance': median_distance,
+                     'q75_distance': q75_distance,
+                     'max_distance': max_distance,
+                     'x_less_than_0mm': non_ablated,
+                     'x_equal_greater_than_0m': insuffiecient_ablated,
+                     'x_equal_greater_than_5m': completely_ablated}
 
     df = pd.DataFrame([coverage_data])
     return df

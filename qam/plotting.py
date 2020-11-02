@@ -4,7 +4,6 @@ Created on Wed Nov 15 16:15:51 2017
 
 @author: Raluca Sandu
 """
-import os
 from collections import OrderedDict
 
 import matplotlib
@@ -18,17 +17,17 @@ np.seterr(divide='ignore', invalid='ignore')
 cmap = sns.color_palette("colorblind")  # colorblind friendly palette
 
 
-def plot_histogram_surface_distances(pat_name, lesion_id, output_file, distance_map, title, ablation_date, print_case_details=True):
+def plot_histogram_surface_distances(pat_name, lesion_id, output_file, distance_map, title, print_case_details=True):
     """
 
-    :param pat_name:
-    :param lesion_id:
-    :param rootdir:
-    :param distance_map:
-    :param num_voxels:
-    :param title:
-    :param ablation_date:
-    :return:
+    Plots and saves the surface distances (traffic-light color schemes) between tumor and ablation.
+    :param pat_name: Patient Name
+    :param lesion_id: Lesion 1, 2, 3...etc
+    :param output_file: Name of the img saved to the disk
+    :param distance_map: Array containing all the surface distances computed.
+    :param title: Title of the plot.
+    :param print_case_details: True/False to plot an extended title on the image.
+    :return: The percentages of non-ablated, insufficiently ablated and completely ablated tumor surface.
     """
     fontsize = 20
 
@@ -41,7 +40,6 @@ def plot_histogram_surface_distances(pat_name, lesion_id, output_file, distance_
         max_val = int(np.ceil(max(distance_map)))
 
     bins = np.arange(min_val, max_val + 1.5, 1)
-    # bins = range(min_val - 1, max_val + 1)
     col_height, bins, patches = ax.hist(distance_map, ec='black', align='mid', bins=bins)
 
     voxels_nonablated = []
@@ -78,11 +76,10 @@ def plot_histogram_surface_distances(pat_name, lesion_id, output_file, distance_
             plt.setp(p, 'facecolor', cmap[2],
                      label='Ablation Margin ' + r'$x \geq 5$' + 'mm: ' + " %.2f" % sum_perc_ablated + '%')
     # %% edit the axes limits and labels
-    plt.xlabel('Surface-to-Surface exact Euclidean Distances (mm)', fontsize=fontsize, color='black')
+    plt.xlabel('Surface-to-Surface Exact Euclidean Distances (mm)', fontsize=fontsize, color='black')
     plt.tick_params(labelsize=fontsize, color='black')
     ax.tick_params(colors='black', labelsize=fontsize)
     ax.set_xlim([-15, 15])
-
     # edit the y-ticks: change to percentage of surface
     yticks, locs = plt.yticks()
     percent = (yticks / num_voxels) * 100
@@ -100,18 +97,15 @@ def plot_histogram_surface_distances(pat_name, lesion_id, output_file, distance_
     ax.tick_params(axis='both', labelsize=fontsize)
     ax.grid(False)
     # %% save the fig to disk as png and eps
-    # fig_name_hist = 'Pat_' + str(pat_name) + '_Lesion' + str(
-    #     lesion_id) + '_AblationDate_' + ablation_date + '_histogram'
     if print_case_details:
         plt.title(title + '. Case ' + str(pat_name) + '. Lesion ' + str(lesion_id), fontsize=fontsize)
     else:
         plt.title(title, fontsize=fontsize)
-    # plt.title(title + '. Lesion ' + str(lesion_id), fontsize=fontsize)
-    # figpath_hist = os.path.join(rootdir, fig_name_hist)
+
     ax.set_rasterized(True)
-    plt.savefig(output_file, dpi=600, bbox_inches='tight')
+    plt.savefig(output_file + '.png', dpi=600, bbox_inches='tight')
     plt.savefig(output_file + '.svg', dpi=600)
-    plt.savefig(output_file + '.eps')
+    plt.savefig(output_file + '.eps', dpi=600)
 
     plt.close()
 

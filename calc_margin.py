@@ -20,21 +20,22 @@ from utils.niftireader import load_image
 np.set_printoptions(suppress=True, precision=4)
 today = date.today()
 
+
 def get_args():
     ap = argparse.ArgumentParser()
     ap.add_argument("-t", "--tumor", required=True, help="path to the tumor segmentation")
     ap.add_argument("-a", "--ablation", required=True, help="path to the ablation segmentation")
+    ap.add_argument("-o", "--OUTPUT", required=True, help="output filename for surface distances (Excel)")
     ap.add_argument("-l", "--liver", required=False, help="path to the liver segmentation")
     ap.add_argument("-p", "--patient-id", required=False, help="patient id from study")
     ap.add_argument("-i", "--lesion-id", required=False, help="lesion id")
     ap.add_argument("-d", "--ablation-date", required=False, help="ablation date from study")
-    ap.add_argument("-o", "--OUTPUT", required=False, help="output filename (csv)")
     args = vars(ap.parse_args())
     return args
 
 
 if __name__ == '__main__':
-    # get the args
+
     args = get_args()
     tumor_file = args['tumor']
     ablation_file = args['ablation']
@@ -44,18 +45,20 @@ if __name__ == '__main__':
     ablation_date = args['ablation_date']
     output_dir = args['OUTPUT']
 
-    # check whether the input has been provided
+    # check whether the input has been provided for all vars if not give some random values
     if patient_id is None:
         patient_id = 'Test'
     if lesion_id is None:
         lesion_id = 1
     if ablation_date is None:
         ablation_date = today.strftime("%d-%m-%Y")
-    
+
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
-    output_file_csv = os.path.join(output_dir, str(patient_id) + '_' + str(lesion_id) + '_surface_distances.xlsx')
-    output_file_png = os.path.join(output_dir, str(patient_id) + '_' + str(lesion_id) + '_surface_distances.png')
+    output_file_csv = os.path.join(output_dir, str(patient_id) + '_' + str(lesion_id) + '_' + str(
+        ablation_date) + '_surface_distances.xlsx')
+    output_file_png = os.path.join(output_dir, str(patient_id) + '_' + str(lesion_id) + '_' + str(
+        ablation_date) + '_surface_distances')
 
     tumor, tumor_np = load_image(tumor_file)
     # check if there is actually a segmentation in the file
@@ -85,14 +88,15 @@ if __name__ == '__main__':
     surface_distance = compute_distances(mask_gt=tumor_np, mask_pred=ablation_np,
                                          exclusion_zone=liver_np if has_liver_segmented else None,
                                          spacing_mm=spacing, connectivity=1, crop=False)
-
+    # call the surface distance extraction function
     if surface_distance['distances_gt_to_pred'].size > 0:
         # if surface distances returned are not empty
-        non_ablated, insuffiecient_ablated, completely_ablated =\
-            pm.plot_histogram_surface_distances(patient_id, lesion_id, output_file_png,
+        non_ablated, insufficiently_ablated, completely_ablated = \
+            pm.plot_histogram_surface_distances(pat_name=patient_id, lesion_id=lesion_id,
+                                                output_file=output_file_png,
                                                 distance_map=surface_distance['distances_gt_to_pred'],
                                                 title='Quantitative Ablation Margin',
-                                                ablation_date=ablation_date)
+                                                print_case_details=True)
         df = pd.DataFrame(data={
             'Patient': [patient_id] * len(surface_distance['distances_gt_to_pred']),
             'Lesion': [lesion_id] * len(surface_distance['distances_gt_to_pred']),
@@ -114,9 +118,9 @@ if __name__ == '__main__':
                         'median_distance': median_distance,
                         'q75_distance': q75_distance,
                         'x_less_than_0mm': non_ablated,
-                        'x_equal_greater_than_0m': insuffiecient_ablated,
+                        'x_equal_greater_than_0m': insufficiently_ablated,
                         'x_equal_greater_than_5m': completely_ablated}
-
+        # save to Excel
         df_percentages_coverage = pd.DataFrame([patient_data])
         df_percentages_coverage.to_excel(writer, sheet_name='percentages_coverage', index=False, float_format='%.4f')
         writer.save()

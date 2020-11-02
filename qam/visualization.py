@@ -1,5 +1,6 @@
 import vtk
 
+
 def process_data(input_file, color):
     reader = vtk.vtkNIFTIImageReader()
     reader.SetFileName(input_file)
@@ -35,17 +36,18 @@ def process_data(input_file, color):
 
     return normal_generator, actor
 
+
 def create_distance_map(tumor, ablation):
     distance_filter = vtk.vtkDistancePolyDataFilter()
     distance_filter.SignedDistanceOn()
-    distance_filter.SetInputConnection(1, tumor.GetOutputPort() )
-    distance_filter.SetInputConnection(0, ablation.GetOutputPort() )
+    distance_filter.SetInputConnection(1, tumor.GetOutputPort())
+    distance_filter.SetInputConnection(0, ablation.GetOutputPort())
     distance_filter.Update()
 
     mapper = vtk.vtkPolyDataMapper()
     mapper.SetInputConnection(distance_filter.GetOutputPort())
-    mapper.SetScalarRange( distance_filter.GetOutput().GetPointData().GetScalars().GetRange()[0],
-                           distance_filter.GetOutput().GetPointData().GetScalars().GetRange()[1])
+    mapper.SetScalarRange(distance_filter.GetOutput().GetPointData().GetScalars().GetRange()[0],
+                          distance_filter.GetOutput().GetPointData().GetScalars().GetRange()[1])
     print('Min distance: ', distance_filter.GetOutput().GetPointData().GetScalars().GetRange()[0])
     print('Max distance: ', distance_filter.GetOutput().GetPointData().GetScalars().GetRange()[1])
     mapper.SetScalarRange(-5, 15)
@@ -69,6 +71,7 @@ def create_distance_map(tumor, ablation):
     scalar_bar.SetLookupTable(hueLut)
 
     return actor, scalar_bar
+
 
 def visualize_3d_margin(tumor_file, ablation_file, output_file):
     colors = vtk.vtkNamedColors()
