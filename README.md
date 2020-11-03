@@ -1,4 +1,4 @@
-# Quantiative Ablation Margin (QAM)
+# Quantitative Ablation Margin (QAM)
 Library to compute 3D surface-distances between a tumor and an ablation volume.
 
 
