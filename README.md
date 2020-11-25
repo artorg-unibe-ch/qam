@@ -34,10 +34,8 @@ To plot the margin as a histogram:
                                                 output_file=output_file_png,
                                                 distance_map=surface_distance['distances_gt_to_pred'],
                                                 title='Quantitative Ablation Margin',
-                                                print_case_details=True')
+                                                print_case_details=True)
 
 To visualize the margin in 3D, the NIFTI files can be passed directly:
 
     visualization.visualize_3d_margin(tumor_nii, ablation_nii, output_file_wrl)
-    
-
