@@ -15,7 +15,7 @@ import pandas as pd
 
 import qam.plotting as pm
 from qam.margin import compute_distances
-from utils.niftireader import load_image
+from qam.utils.niftireader import load_image
 
 np.set_printoptions(suppress=True, precision=4)
 today = date.today()
@@ -25,7 +25,8 @@ def get_args():
     ap = argparse.ArgumentParser()
     ap.add_argument("-t", "--tumor", required=True, help="path to the tumor segmentation")
     ap.add_argument("-a", "--ablation", required=True, help="path to the ablation segmentation")
-    ap.add_argument("-o", "--OUTPUT", required=True, help="output filename for surface distances (Excel)")
+    ap.add_argument("-om", "--output-margin", required=True, help="output margin (xlsx)")
+    ap.add_argument("-oh", "--output-histogram", required=True, help="output histogram (png)")
     ap.add_argument("-l", "--liver", required=False, help="path to the liver segmentation")
     ap.add_argument("-p", "--patient-id", required=False, help="patient id from study")
     ap.add_argument("-i", "--lesion-id", required=False, help="lesion id")
@@ -43,7 +44,8 @@ if __name__ == '__main__':
     patient_id = args['patient_id']
     lesion_id = args['lesion_id']
     ablation_date = args['ablation_date']
-    output_dir = args['OUTPUT']
+    output_file_margin = args['output_margin']
+    output_file_histogram = args['output_histogram']
 
     # check whether the input has been provided for all vars if not give some random values
     if patient_id is None:
@@ -52,13 +54,6 @@ if __name__ == '__main__':
         lesion_id = 1
     if ablation_date is None:
         ablation_date = today.strftime("%d-%m-%Y")
-
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
-    output_file_csv = os.path.join(output_dir, str(patient_id) + '_' + str(lesion_id) + '_' + str(
-        ablation_date) + '_surface_distances.xlsx')
-    output_file_png = os.path.join(output_dir, str(patient_id) + '_' + str(lesion_id) + '_' + str(
-        ablation_date) + '_surface_distances')
 
     tumor, tumor_np = load_image(tumor_file)
     # check if there is actually a segmentation in the file
@@ -93,7 +88,7 @@ if __name__ == '__main__':
         # if surface distances returned are not empty
         non_ablated, insufficiently_ablated, completely_ablated = \
             pm.plot_histogram_surface_distances(pat_name=patient_id, lesion_id=lesion_id,
-                                                output_file=output_file_png,
+                                                output_file=output_file_histogram,
                                                 distance_map=surface_distance['distances_gt_to_pred'],
                                                 title='Quantitative Ablation Margin',
                                                 print_case_details=True)
@@ -102,7 +97,7 @@ if __name__ == '__main__':
             'Lesion': [lesion_id] * len(surface_distance['distances_gt_to_pred']),
             'Distances': surface_distance['distances_gt_to_pred']})
 
-        writer = pd.ExcelWriter(output_file_csv)
+        writer = pd.ExcelWriter(output_file_margin)
         df.to_excel(writer, sheet_name='surface_distances', index=False, float_format='%.4f')
         max_distance = np.nanmax(surface_distance['distances_gt_to_pred'])
         min_distance = np.nanmin(surface_distance['distances_gt_to_pred'])

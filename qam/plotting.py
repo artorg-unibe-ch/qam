@@ -103,7 +103,7 @@ def plot_histogram_surface_distances(pat_name, lesion_id, output_file, distance_
         plt.title(title, fontsize=fontsize)
 
     ax.set_rasterized(True)
-    plt.savefig(output_file + '.png', dpi=600, bbox_inches='tight')
+    plt.savefig(output_file, dpi=600, bbox_inches='tight')
     plt.savefig(output_file + '.svg', dpi=600)
     plt.savefig(output_file + '.eps', dpi=600)
 

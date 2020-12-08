@@ -16,20 +16,29 @@ We used an adapted Dice Soerensen coefficient to evaluate the ablation completen
 
 The library can be installed via pip from the GitHub repository
 
-    python -m pip install https://github.com/artorg-unibe-ch/qam.git
+    python -m pip install git+https://github.com/artorg-unibe-ch/qam.git
 
 ## Usage
+
+To calculate the ablation margin one needs a segmentation mask of the tumor, ablation, and (optional) liver. All images need to be in the same spacing, and co-registered.
+
+### Usage on the command line
+
+    python -m qam -t tumor_file -a ablation_file -l liver_file -om output_filename -p patient_id
+
+### Usage in own code
 Import the packages
 
     from qam import margin, plotting, visualization
 
-To calculate the ablation margin one needs a segmentation mask of the tumor, ablation, and (optional) liver. All images need to be in the same spacing, and co-registered.
+Calculate the ablation margin:
 
-    calc_margin.py -t tumor_file -a ablation_file -l liver_file -o output_filename -p patient_id
+    distances = margin.compute_distances(tumor, ablation, liver, spacing_mm)
+    df = margin.summarize(subject_id, lesion_id, distances)
 
-To plot the margin as a histogram:
+Plot the margin as a histogram:
 
-    non_ablated, insuffiecient_ablated, completely_ablated =\
+    non_ablated, insuffieciently_ablated, completely_ablated =\
     plotting.plot_histogram_surface_distances(pat_name=patient_id, lesion_id=lesion_id,
                                                 output_file=output_file_png,
                                                 distance_map=surface_distance['distances_gt_to_pred'],
@@ -39,3 +48,7 @@ To plot the margin as a histogram:
 To visualize the margin in 3D, the NIFTI files can be passed directly:
 
     visualization.visualize_3d_margin(tumor_nii, ablation_nii, output_file_wrl)
+
+### With automation like Snakemake
+
+It is possible to use the code in an automated way. An example using Snakemake is provided in the examples.
