@@ -1,0 +1,68 @@
+import os
+from snakemake.utils import validate, min_version
+
+##### set minimum snakemake version #####
+min_version("5.17.0")
+
+def get_patient_ids():
+    patient_ids = list(filter(lambda x: os.path.isdir(x) and not x.startswith('_')
+                               and not x.startswith('.'), os.listdir('.')))
+    return patient_ids
+
+def get_lesion_ids(patient_folder):
+    lesion_ids = list(filter(lambda x: os.path.isdir(os.path.join(patient_folder,x))and not x.startswith('_')
+                               and not x.startswith('.') , os.listdir(patient_folder)))
+    return lesion_ids
+
+rule calc_margin:
+    input:
+        tumor = "{patient_id}/{lesion_id}/{patient_id}_L{lesion_id}_Tumor.nii.gz",
+        ablation = "{patient_id}/{lesion_id}/{patient_id}_L{lesion_id}_Ablation.nii.gz",
+        liver = "{patient_id}/{lesion_id}/{patient_id}_L{lesion_id}_Liver.nii.gz",
+    params:
+        patient_id = "{patient_id}",
+        lesion_id = "{lesion_id}",
+    log:
+        "_logs/{patient_id}_L{lesion_id}_calc_margin.log"
+    benchmark:
+        "_benchmarks/{patient_id}_L{lesion_id}.margin.benchmark.txt"
+    output:
+        margin = "_intermediate/distances/{patient_id}_L{lesion_id}_Distances.xlsx",
+        histogram = "_output/histograms/{patient_id}_L{lesion_id}_Histogram.png",
+    shell:
+        "python -m qam \
+            --tumor {input.tumor} \
+            --ablation {input.ablation} \
+            --liver {input.liver}\
+            --patient-id {params.patient_id} \
+            --lesion-id {params.lesion_id} \
+            --output-margin {output.margin} \
+            --output-histogram {output.histogram}"
+
+
+def input_aggregate_margins_patient(wildcards):
+    lesion_ids = get_lesion_ids(wildcards.patient_id)
+    return expand("_intermediate/distances/{patient_id}_L{lesion_id}_Distances.xlsx",
+               lesion_id = lesion_ids,
+               patient_id = wildcards.patient_id)
+
+rule aggregate_margins_patient:
+    input:
+        input_aggregate_margins_patient
+    output:
+        "_aggregated/{patient_id}_Distances.xlsx"
+    script:
+        "aggregate_data.py"
+
+def input_aggregate_margins_all(wildcards):
+    patient_ids = get_patient_ids()
+    return expand("_aggregated/{patient_id}_Distances.xlsx",
+               patient_id = patient_ids)
+
+rule aggregate_margins_all:
+    input:
+        input_aggregate_margins_all
+    output:
+        "_output/Aggregated.xlsx"
+    script:
+        "aggregate_data.py"

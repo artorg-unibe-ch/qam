@@ -1,0 +1,5 @@
+
+keep-target-files: true
+printshellcmds: true
+cores: 1
+keep-going: true
